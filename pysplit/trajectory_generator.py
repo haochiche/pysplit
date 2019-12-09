@@ -8,7 +8,7 @@ from calendar import monthrange
 
 
 def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, years,
-                      months, hours, altitudes, coordinates, run,
+                      months, hours, mins,altitudes, coordinates, run,
                       meteoyr_2digits=True, outputyr_2digits=False,
                       monthslice=slice(0, 32, 1), meteo_bookends=([4, 5], [1]),
                       get_reverse=False, get_clipped=False,
@@ -40,6 +40,8 @@ def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, years,
     months : list of ints
         The month(s) to run simulations
     hours : list of ints
+        Parcel launching times in UTC.
+    mins  : list of ints
         Parcel launching times in UTC.
     altitudes : list of ints
         The altitudes (usually meters above ground level) from which
@@ -144,11 +146,11 @@ def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, years,
             fnameyr = fnameyearfunc(y)
 
             # Iterate over days, hours, altitudes
-            for d, h, a in itertools.product(days, hours, altitudes):
+            for d, h, ms, a in itertools.product(days, hours, mins,altitudes):
 
                 # Add timing and altitude to basename to create unique name
                 trajname = (basename + m_str + '{:04}'.format(a) + season +
-                            fnameyr + "{0:02}{1:02}{2:02}".format(m, d, h))
+                            fnameyr + "{0:02}{1:02}{2:02}{3:02}".format(m, d, h,ms))
 
                 final_trajpath = os.path.join(output_dir, trajname)
 
@@ -158,7 +160,7 @@ def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, years,
                 _try_to_remove(final_trajpath)
 
                 # Populate CONTROL file with trajectory initialization data
-                _populate_control(coordinates, controlyr, m, d, h, a, meteo_dir,
+                _populate_control(coordinates, controlyr, m, d, h, ms,a, meteo_dir,
                                   meteofiles, run, controlfname, trajname)
 
                 # Call executable to calculate trajectory
@@ -229,6 +231,7 @@ def _reversetraj_whilegen(trajname, run, hysplit, output_rdir, meteo_dir,
     mon  = int(data[3])
     day  = int(data[4])
     hour = int(data[5])
+    mins = int(date[6])
     lat  = float(data[9])
     lon  = float(data[10])
     alt  = float(data[11])
@@ -247,7 +250,7 @@ def _reversetraj_whilegen(trajname, run, hysplit, output_rdir, meteo_dir,
     _try_to_remove(final_rtrajpath)
 
     # Populate control text
-    _populate_control((lat, lon), yr, mon, day, hour, alt, meteo_dir,
+    _populate_control((lat, lon), yr, mon, day, hour, mins,alt, meteo_dir,
                       meteofiles, run, controlfname, reversetrajname)
 
     # Call executable
@@ -418,7 +421,7 @@ def _meteofinder(meteo_dir, meteo_bookends, mon, year, mon_dict,
     return meteofiles
 
 
-def _populate_control(coords, year, month, day, hour, alt,
+def _populate_control(coords, year, month, day, hour, mins,alt,
                       meteo_dir, meteofiles, run, controlfname, trajname):
     """
     Initialize and write CONTROL text to file (called CONTROL).
@@ -432,6 +435,8 @@ def _populate_control(coords, year, month, day, hour, alt,
     months : list of ints
         The month of the simulation
     hours : list of ints
+        Parcel launching times in UTC.
+    mins  : list of ints
         Parcel launching times in UTC.
     alt : int
         The altitude (usually meters above ground level) from which
@@ -449,7 +454,7 @@ def _populate_control(coords, year, month, day, hour, alt,
         The intended name of the trajectory file
 
     """
-    controltext = [year + " {0:02} {1:02} {2:02}\n".format(month, day, hour),
+    controltext = [year + " {0:02} {1:02} {2:02} {3:02}\n".format(month, day, hour,mins),
                    "1\n",
                    "{0!s} {1!s} {2!s}\n".format(coords[0], coords[1], alt),
                    "{0!s}\n".format(run),
