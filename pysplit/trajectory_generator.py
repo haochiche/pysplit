@@ -8,7 +8,7 @@ from calendar import monthrange
 
 
 def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, years,
-                      months, hours, mins,altitudes, coordinates, run,
+                      months, hours, mins,altitudes, coordinates, run,meteofiles='',
                       meteoyr_2digits=True, outputyr_2digits=False,
                       monthslice=slice(0, 32, 1), meteo_bookends=([4, 5], [1]),
                       get_reverse=False, get_clipped=False,
@@ -87,6 +87,10 @@ def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, years,
         executable that generates trajectories.  This is the default location
         for a typical PC installation of HYSPLIT
 
+    meteofiles : list
+        Default to zero.
+        If files list is provided, then use the provided files directorily.
+
     """
     # Set year formatting in 3 places
     yr_is2digits = {True : _year2string,
@@ -137,10 +141,11 @@ def generate_bulktraj(basename, hysplit_working, output_dir, meteo_dir, years,
             m_len = monthrange(y, m)[1]
 
             days = range(1, m_len + 1)[monthslice]
-
-            # Assemble list of meteorology files
-            meteofiles = _meteofinder(meteo_dir, meteo_bookends, m, y,
-                                      mon_dict, meteoyearfunc)
+            if len(meteofiles)<1:
+                #get meteofiles if not supplied
+                #Assemble list of meteorology files
+                meteofiles = _meteofinder(meteo_dir, meteo_bookends, m, y,
+                                        mon_dict, meteoyearfunc)
 
             controlyr = controlyearfunc(y)
             fnameyr = fnameyearfunc(y)

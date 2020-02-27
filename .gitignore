@@ -2,3 +2,6 @@
 *version.py
 *.egg-info*
 *.coverage
+pysplit/.DS_Store
+pysplit/tests/.DS_Store
+.DS_Store
